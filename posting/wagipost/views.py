@@ -1,50 +1,23 @@
-from django.shortcuts import render, redirect
-from rest_framework.decorators import api_view
-from rest_framework.response import Response
-from rest_framework import status
+from rest_framework import viewsets
+from rest_framework.parsers import MultiPartParser, FormParser
 from .models import Post
 from .serializers import PostSerializer
 
-# Create your views here.
+class PostViewSet(viewsets.ModelViewSet):
+    queryset = Post.objects.all()
+    serializer_class = PostSerializer
+    parser_classes = [MultiPartParser, FormParser] 
+    # 이미지 업로드 위해 필요
+    '''
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        post = serializer.save()
 
-#def post_list(request):
-#    posts = Post.objects.all()
-#    serializer = PostSerializer(posts, many=True)
-#    return Response(serializer.data)
+        # 이미지 여러 개 처리
+        image_files = request.FILES.getlist('image_files')
+        for image in image_files:
+            PostImage.objects.create(post=post, image=image)
 
-@api_view(['GET', 'POST'])
-def post_list(request):
-    if request.method == 'GET':
-        posts = Post.objects.all()
-        serializer = PostSerializer(posts, many=True)
-        return Response(serializer.data)
-    
-    elif request.method == 'POST':
-        serializer = PostSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
-
-@api_view(['GET', 'PUT', 'DELETE'])
-def post_detail(request, post_id):
-    try:
-        post = Post.objects.get(id=post_id)
-    except Post.DoesNotExist:
-        return Response({'error': '게시글이 존재하지 않습니다.'}, status=status.HTTP_404_NOT_FOUND)
-
-    if request.method == 'GET':
-        serializer = PostSerializer(post)
-        return Response(serializer.data)
-
-    elif request.method == 'PUT':
-        serializer = PostSerializer(post, data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
-    elif request.method == 'DELETE':
-        post.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+            return Response(self.get_serializer(post).data, status=status.HTTP_201_CREATED)
+            '''
